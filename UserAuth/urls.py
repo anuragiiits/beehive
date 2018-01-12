@@ -1,5 +1,5 @@
 from django.urls import include, path
-from .views import AddUser, ChangePermission
+from .views import AddUser, ChangePermission, CheckUser
 
 app_name = 'UserAuth'
 
@@ -8,5 +8,6 @@ urlpatterns = [
     path(
         'changepermission/',
         ChangePermission.as_view(),
-        name="change_user_permission")
+        name="change_user_permission"),
+    path('checkpermission/', CheckUser.as_view(), name="userstatus"),
 ]

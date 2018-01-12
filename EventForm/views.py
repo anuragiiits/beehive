@@ -43,6 +43,40 @@ class NewEventsView(APIView):
         except Exception:
             return Response(status=500)
 
+    def put(self, request, format=None):
+        try:
+            event_id = request.data.get('id')
+            if event_id is None:
+                return Response(status=status.HTTP_206_PARTIAL_CONTENT)
+            event = NewEvents.objects.get(id=event_id)
+            serializer = self.serializer_class(event,data=request.data,partial=True)
+            # print(request.user.customuser.id,request.data.get('user_id'))
+            if serializer.is_valid():
+                if (int(request.user.customuser.id) != int(event.user.user.id) or int(request.user.customuser.id) != int(request.data.get('user_id')) or request.user.customuser.is_manager != True) and request.user.customuser.is_admin is False:
+                    return Response(status=status.HTTP_403_FORBIDDEN)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception:
+            return Response(status=500)
+
+    def delete(self, request, format=None):
+        try:
+            event_id = request.data.get('id')
+            if event_id is None:
+                return Response(status=status.HTTP_206_PARTIAL_CONTENT)
+            event = NewEvents.objects.get(id=event_id)
+            # print("events",event,request.user.customuser.id)
+            if (int(request.user.customuser.id) == int(event.user.user.id) or request.user.customuser.is_manager == True or request.user.customuser.is_admin is True):
+                event.delete()
+                return Response(status=status.HTTP_202_ACCEPTED)
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        except Exception:
+            #print(traceback.format_exc())
+            return Response(status=500)
+
+                
 
 class EventRegistrationView(APIView):
     serializer_class = EventRegistrationSerializer
@@ -69,6 +103,24 @@ class EventRegistrationView(APIView):
         except Exception:
             print(traceback.format_exc())
             return Response(status=500)
+    
+    def put(self, request, format=None):
+        try:
+            event_reg_id = request.data.get('id')
+            if event_reg_id is None:
+                return Response(status=status.HTTP_206_PARTIAL_CONTENT)
+            event_reg = EventRegistration.objects.get(id=event_reg_id)
+            serializer = self.serializer_class(event_reg,data=request.data)
+            if serializer.is_valid():
+                if int(event_reg.applied_by.user.id) == int(request.user.customuser.id) or int(event_reg.event.user.user.id) == int(request.user.customuser.id):
+                    serializer.save()
+                    return Response(status=status.HTTP_202_ACCEPTED)
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception:
+            print(traceback.format_exc())
+            return Response(status=500)
 
     def delete(self, request, format=None):
         try:
@@ -83,3 +135,11 @@ class EventRegistrationView(APIView):
         except Exception:
             print(traceback.format_exc())
             return Response(status=500)
+
+class DisplayAllEvents(APIView):
+    serializer_class = NewEventsSerializer
+
+    def get(self, request, format=None):
+        events = NewEvents.objects.all()
+        serializer = self.serializer_class(events, many=True)
+        return Response(serializer.data)

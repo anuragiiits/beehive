@@ -3,11 +3,11 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, UserSerializer
 
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 
@@ -15,6 +15,12 @@ class AddUser(APIView):
     serializer_class = CustomUserSerializer
     permission_classes = (AllowAny, )
 
+    def get(self, request, format=None):
+        permissions_classes = (IsAuthenticated,)
+        user = request.user.customuser
+        serializer = self.serializer_class(user)
+        return Response(serializer.data)
+        
     def post(self, request, format=None):
         try:
             serializer = self.serializer_class(data=request.data)
@@ -50,3 +56,15 @@ class ChangePermission(APIView):
             return Response(status=status.HTTP_200_OK)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class CheckUser(APIView):
+    serializer_class = UserSerializer
+    # permission_classes = (AllowAny, )
+    def get(self, request, format=None):
+        permissions_classes = (IsAuthenticated,)
+        user = request.user.customuser
+        serializer = self.serializer_class(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+

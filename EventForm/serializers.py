@@ -30,6 +30,17 @@ class NewEventsSerializer(ModelSerializer):
         user = get_object_or_404(CustomUser, id=user_data)
         new_event = NewEvents.objects.create(user=user, **validated_data)
         return new_event
+    def update(self, instance, validated_data):
+        # print("Check", instance, validated_data)
+        
+        instance.start_date = validated_data.get('start_date',instance.start_date)
+        instance.end_date = validated_data.get('end_date',instance.end_date)
+        instance.start_time = validated_data.get('start_time',instance.start_time)
+        instance.end_time = validated_data.get('end_time',instance.end_time)
+        instance.description = validated_data.get('description',instance.description)
+        instance.name = validated_data.get('name',instance.name)
+        instance.save()
+        return instance
 
 
 class EventRegistrationSerializer(ModelSerializer):
@@ -49,3 +60,9 @@ class EventRegistrationSerializer(ModelSerializer):
         event_reg = EventRegistration.objects.create(
             applied_by=user, event=event, **validated_data)
         return event_reg
+
+    def update(self, instance, validated_data):
+        instance.fullname = validated_data.get('fullname',instance.fullname)
+        instance.number = validated_data.get('number',instance.number)
+        instance.save()
+        return instance
